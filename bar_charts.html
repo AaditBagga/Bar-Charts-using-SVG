@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+<title>SVG primitive drawing with interaction</title>
+<style>
+
+    .div-tooltip {
+        background: cornsilk;
+        border: 1px solid black;
+        border-radius: 5px;
+        padding: 5px;
+    }
+
+</style>
+</head>
+
+<body>
+	<h1> Plotting Male-Female Height, Weight, BMI Measures for 500 Subjects</h1>
+	<div class="div-tooltip" display="none" style="position: absolute; display: none;" ></div>
+	<svg id='svg' width='700' height='500' xmlns="http://www.w3.org/2000/svg"
+		 style='border:0px' fill='skyblue' onload="main()">
+		<rect x="1" y="1" width="698" height="498" stroke="blue" fill='skyblue' />
+		<rect x="349" y="249" height="249" width="349" font-family="Verdana" font-size="35" style="fill: skyblue;"></rect>
+		<text x="350" y="290" font-family="Verdana" font-size="20" fill="blue">
+			Data Set
+		</text>
+		<text x="350" y="320" font-family="Verdana" font-size="15" fill="blue">
+			Number of Records: 500(Males and Females)
+		</text>
+		<text x="350" y="350" font-family="Verdana" font-size="15" fill="blue">
+			Height: [140-199]
+		</text>
+		<text x="350" y="380" font-family="Verdana" font-size="15" fill="blue">
+			Weight: [50-160]
+		</text>
+		<text x="350" y="410" font-family="Verdana" font-size="15" fill="blue">
+			Index: 0(Extr. Weak) - 5(Exr. Obesity)
+		</text>
+		<text id="Count" x="350" y="440" font-family="Verdana" font-size="15" fill="blue"></text>
+		<script type="text/javascript" src="./male_female_wt.js"></script>
+
+</svg>
+	<script type="text/javascript" src="./male_female_wt.js"></script>
+	<script>
+		var Rcolor = "#0000ff";
+		var AxisHeight = 150;
+		var Width = 20;
+		var Data = male_female_gwhi.data;
+		var height = [], weight = [], BMI = [];
+		var id = 0;
+		var sketch = document.getElementById("svg");
+        var Count = document.getElementById("Count");
+
+		
+		function main()
+		{
+			
+			for (let i = 0; i < 500; i++)
+			{
+                height.push(Data[i][1]);
+				weight.push(Data[i][2]);
+                BMI.push(Data[i][3]);
+			}
+
+			PrintHeightGraph();
+			PrintWeightGraph();
+			PrintBMIGraph();
+
+            var Hover = Array.from(document.querySelectorAll(".rect-bar"));
+
+            console.log(Hover);
+
+            Hover.forEach(node => {
+                node.addEventListener("mouseover", function (event) {
+                    ShowData(event, node);
+                });
+
+            });
+		}
+
+		function PrintHeightGraph()
+		{
+			var X = 30, Y = 100, AxisLen = (Width * 10) + 30;
+			var prev = X + 15;
+			var total = height.length;
+            height.sort();
+			var HRange = (height[total - 1] - height[0]) / 11;
+			var openValue = height[0];
+			var bar = [];
+			PrintAxises(X, Y, AxisLen, Width * 10, height[0], height[total-1]);
+            for (let i = 0; i < total; i++)
+			{
+				if (height[i] < openValue + HRange) {
+					bar.push(height[i]);
+				}
+				else {
+                    printBar(bar, prev, Y + AxisHeight, "Height :[", 2);
+                    openValue = openValue + HRange;
+					bar = [];
+                    prev = prev + Width;
+					bar.push(height[i]);
+				}
+			}
+		}
+
+        function PrintWeightGraph() {
+            var X = 350, Y = 100, AxisLen = (Width * 10) + 30;
+			var prev = X + 15;
+            var total = BMI.length;
+            var WRange = (Math.max.apply(null, weight) - Math.min.apply(null, weight)) / 10;
+            weight.sort(function (a, b) {
+                return a - b;
+            });
+            var openValue = weight[0];
+            var bar = [];
+            PrintAxises(X, Y, AxisLen, Width * 10, weight[0], weight[total - 1]);
+            for (let i = 0; i < total; i++) {
+                if (weight[i] < openValue + WRange) {
+                    bar.push(weight[i]);
+                }
+                else {
+                    printBar(bar, prev, Y + AxisHeight, "Weight :[", 2);
+                    openValue = openValue + WRange;
+                    bar = [];
+                    prev = prev + Width;
+                    bar.push(weight[i]);
+                }
+            }
+		}
+
+        function PrintBMIGraph() {
+            var X = 30, Y = 320, AxisLen = (Width * 6) + 30;
+			var prev = X + 15;
+            var total = BMI.length;
+            var BRange = (Math.max.apply(null, BMI) - Math.min.apply(null, BMI)) / 5;            
+            BMI.sort();
+            var openValue = BMI[0];
+            var bar = [];
+            PrintAxises(X, Y, AxisLen, Width * 6, BMI[0], BMI[total - 1]);
+            for (let i = 0; i < total; i++) {
+                if (BMI[i] < openValue + BRange) {
+                    bar.push(BMI[i]);
+                }
+                else {
+                    console.log("b :" + (openValue + BRange));
+                    printBar(bar, prev, Y + AxisHeight, "BMI :[", 1);
+                    openValue = openValue + BRange;
+                    bar = [];
+                    prev = prev + Width;
+                    bar.push(BMI[i]);
+                    console.log(openValue);
+                }
+                if (i == total - 1) {
+                    printBar(bar, prev, Y + AxisHeight, "BMI :[", 1);
+                }
+            }
+		}
+
+		function printBar(bar, prev, y, BeginCont, BarHeightSetter)
+		{
+			var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+			rect.setAttribute("x", prev);
+			var unqID = "rect" + id;
+			id = id + 1;
+            var content = BeginCont + bar[0] + " - " + bar[bar.length - 1] + "]: " + bar.length;
+            rect.setAttribute("y", y - (bar.length * BarHeightSetter) - 10);
+            rect.setAttribute("width", Width);
+            rect.setAttribute("height", bar.length * BarHeightSetter);
+            rect.setAttribute("fill", Rcolor);
+            rect.setAttribute("stroke", "yellow");
+			rect.setAttribute("stroke-width", "2");
+            rect.setAttribute("data-subject", content);
+			rect.setAttribute("id", unqID);
+			rect.setAttribute("class", "rect-bar");
+			sketch.appendChild(rect);
+		}
+
+		function PrintAxises(X, Y, AxisLen, maxlabelPos, min, max) {
+			var LineY = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            LineY.setAttribute("x1", X);
+            LineY.setAttribute("y1", Y);
+            LineY.setAttribute("x2", X);
+            LineY.setAttribute("y2", Y + AxisHeight);
+            LineY.setAttribute("strokeWidth", 4);
+            LineY.setAttribute("stroke", Rcolor)
+            sketch.appendChild(LineY);
+
+            var LineX = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            LineX.setAttribute("x1", X);
+            LineX.setAttribute("y1", Y + AxisHeight);
+            LineX.setAttribute("x2", X + AxisLen);
+            LineX.setAttribute("y2", Y + AxisHeight);
+            LineX.setAttribute("strokeWidth", 4);
+            LineX.setAttribute("stroke", Rcolor)
+            sketch.appendChild(LineX);
+
+			var numberOnAxisMin = document.createElementNS("http://www.w3.org/2000/svg", "text");
+			numberOnAxisMin.setAttribute("dx", X + 15);
+			numberOnAxisMin.setAttribute("dy", Y + AxisHeight + 15);
+			numberOnAxisMin.setAttribute("stroke", "black");
+			numberOnAxisMin.setAttribute("font-family", "Verdana");
+            numberOnAxisMin.setAttribute("font-size", "10");
+			numberOnAxisMin.textContent = min;
+			sketch.appendChild(numberOnAxisMin);
+
+            var numberOnAxisMax = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            numberOnAxisMax.setAttribute("dx", X + maxlabelPos);
+			numberOnAxisMax.setAttribute("dy", Y + AxisHeight + 15);
+            numberOnAxisMax.setAttribute("stroke", "black");
+            numberOnAxisMax.setAttribute("font-family", "Verdana");
+            numberOnAxisMax.setAttribute("font-size", "10");
+			numberOnAxisMax.textContent = max;
+            sketch.appendChild(numberOnAxisMax);
+
+		}
+
+
+        function ShowData(event, node) {
+            Count.textContent = "";
+            let id = node.getAttribute("id");
+            let subject = document.getElementById(id).getAttribute("data-subject");
+            Count.textContent = subject;
+        }
+
+	</script>
+</body>
+</html>
+  
